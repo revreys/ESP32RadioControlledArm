@@ -3,7 +3,7 @@ A multi-joint robotic arm prototype controlled by an ESP32 microcontroller and e
 This project focuses on mechanical prototyping, servo control, and debugging real-world motion issues such as joint binding, torque limits, and power stability. The goal is to practice engineering workflow.
 
 ## Demo
-[![Robotic Arm Demo](assets/images/image.png)](https://youtu.be/FZPfEME9nb4)
+(https://youtu.be/FZPfEME9nb4)
 
 ## Current Status
 
