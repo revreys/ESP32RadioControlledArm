@@ -1,143 +1,99 @@
 #include <Arduino.h>
 #include <ESP32Servo.h>
+#include "ServoCalibration.h"
 
 // pins
 static const int BASE_PIN     = 4;
 static const int SHOULDER_PIN = 5;
 
-// servo pulse range
-static const int SERVO_MIN_US = 500;
-static const int SERVO_MAX_US = 2500;
+// attach range (wide)
+static const int ATTACH_MIN_US = 500;
+static const int ATTACH_MAX_US = 2500;
 
-//
-static const int SHOULDER_MIN_US = 900;
-static const int SHOULDER_MAX_US = 1600;
-static const int SHOULDER_MID_US = 2300;
+// fine tuning
+static const int START_HOLD_MS = 300;    // pause at middle before each run
+static const int ENDPOINT_HOLD_MS = 80; // pause at each turnaround point
+static const int SWEEP_DELAY_MS = 8;     // delay between microsecond steps
+static const int SWEEP_STEP_US = 10;     // movement resolution within one swing
+static const int WINDOW_STEP_US = 100;   // endpoint shrink each full oscillation
 
 Servo baseServo;
 Servo shoulderServo;
 
-// helpers
-void baseMoveDeg(int deg, int holdMs = 0) {
-  baseServo.write(deg);
-  if (holdMs > 0) delay(holdMs);
-}
+void oscillateTowardMid(Servo &s, int minUs, int midUs, int maxUs,
+                        int sweepStepUs, int windowStepUs, const char* name)
+{
+  Serial.print("=== ");
+  Serial.print(name);
+  Serial.println(": MIN<->MAX oscillation shrinking toward MID ===");
 
-void shoulderMoveUs(int us, int holdMs = 0) {
-  shoulderServo.writeMicroseconds(us);
-  if (holdMs > 0) delay(holdMs);
-}
+  s.writeMicroseconds(midUs);
+  delay(START_HOLD_MS);
 
-void sweepBase(int fromDeg, int toDeg, int stepDeg, int stepDelayMs) {
-  if (fromDeg < toDeg) {
-    for (int d = fromDeg; d <= toDeg; d += stepDeg) {
-      baseServo.write(d);
-      delay(stepDelayMs);
+  int lo = minUs;
+  int hi = maxUs;
+
+  while (true) {
+    // sweep up from low endpoint to high endpoint
+    for (int pos = lo; pos <= hi; pos += sweepStepUs) {
+      s.writeMicroseconds(pos);
+      delay(SWEEP_DELAY_MS);
     }
-  } else {
-    for (int d = fromDeg; d >= toDeg; d -= stepDeg) {
-      baseServo.write(d);
-      delay(stepDelayMs);
-    }
-  }
-}
+    s.writeMicroseconds(hi);
+    delay(ENDPOINT_HOLD_MS);
 
-void rapidShoulderEndToEnd(int cycles, int holdEachEndMs) {
-  for (int i = 0; i < cycles; i++) {
-    shoulderServo.writeMicroseconds(SHOULDER_MIN_US);
-    delay(holdEachEndMs);
-    shoulderServo.writeMicroseconds(SHOULDER_MAX_US);
-    delay(holdEachEndMs);
+    // sweep down from high endpoint to low endpoint
+    for (int pos = hi; pos >= lo; pos -= sweepStepUs) {
+      s.writeMicroseconds(pos);
+      delay(SWEEP_DELAY_MS);
+    }
+    s.writeMicroseconds(lo);
+    delay(ENDPOINT_HOLD_MS);
+
+    int nextLo = lo + windowStepUs;
+    int nextHi = hi - windowStepUs;
+
+    if (nextLo >= midUs || nextHi <= midUs || nextLo >= nextHi) {
+      s.writeMicroseconds(midUs);
+      delay(START_HOLD_MS);
+      break;
+    }
+
+    lo = nextLo;
+    hi = nextHi;
   }
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(1200);
+  delay(1000);
 
   baseServo.setPeriodHertz(50);
   shoulderServo.setPeriodHertz(50);
 
-  baseServo.attach(BASE_PIN, SERVO_MIN_US, SERVO_MAX_US);
-  shoulderServo.attach(SHOULDER_PIN, SERVO_MIN_US, SERVO_MAX_US);
+  baseServo.attach(BASE_PIN, ATTACH_MIN_US, ATTACH_MAX_US);
+  shoulderServo.attach(SHOULDER_PIN, ATTACH_MIN_US, ATTACH_MAX_US);
 
-  // Safe start
-  baseServo.write(90);
+  //center servos
+  baseServo.writeMicroseconds(BASE_MID_US);
   shoulderServo.writeMicroseconds(SHOULDER_MID_US);
 
-  Serial.println("Test run starting...");
-  delay(2000);
+  Serial.println("Starting: SHOULDER first, then BASE.");
+  delay(800);
 }
 
 void loop() {
+  // shoulder movement
+  baseServo.writeMicroseconds(BASE_MID_US);
+  oscillateTowardMid(shoulderServo,
+                     SHOULDER_MIN_US, SHOULDER_MID_US, SHOULDER_MAX_US,
+                     SWEEP_STEP_US, WINDOW_STEP_US, "SHOULDER");
 
-  
-  // slow base rotation
-
-  Serial.println("Phase 1: Base slow sweep");
-  shoulderServo.writeMicroseconds(SHOULDER_MID_US); 
-
-  sweepBase(60, 120, 1, 30); 
-  delay(500);
-  sweepBase(120, 60, 1, 30); 
-  delay(1000);
-
-
-  // rapid base rotation
- 
-  Serial.println("Phase 2: Base rapid sweep");
+  // base movement
   shoulderServo.writeMicroseconds(SHOULDER_MID_US);
-
-  sweepBase(60, 120, 3, 8);
-  delay(250);
-  sweepBase(120, 60, 3, 8);
-  delay(1000);
-
-  // rapid shoulder movement
-  
-  Serial.println("Phase 3: Shoulder rapid end-to-end");
-  baseServo.write(90);         // lock base still
-
-  rapidShoulderEndToEnd(6, 120);   // 6 cycles
-  Serial.println("Phase 3: Shoulder -> middle");
-  shoulderServo.writeMicroseconds(SHOULDER_MID_US);
-  delay(1500);
-
-  
-  // move together slowly
-  
-  Serial.println("Phase 4: Slow synchronized move");
-
-  // move base
-  const int steps = 120;
-  for (int i = 0; i <= steps; i++) {
-    int baseDeg = 60 + (60 * i) / steps;
-
-    int shoulderUs = SHOULDER_MIN_US +
-      (int)((long)(SHOULDER_MAX_US - SHOULDER_MIN_US) * i / steps);
-
-    baseServo.write(baseDeg);
-    shoulderServo.writeMicroseconds(shoulderUs);
-    delay(20);
-  }
-
-  delay(800);
-
-  
-  for (int i = 0; i <= steps; i++) {
-    int baseDeg = 120 - (60 * i) / steps;
-
-    int shoulderUs = SHOULDER_MAX_US -
-      (int)((long)(SHOULDER_MAX_US - SHOULDER_MIN_US) * i / steps);
-
-    baseServo.write(baseDeg);
-    shoulderServo.writeMicroseconds(shoulderUs);
-    delay(20);
-  }
+  oscillateTowardMid(baseServo,
+                     BASE_MIN_US, BASE_MID_US, BASE_MAX_US,
+                     SWEEP_STEP_US, WINDOW_STEP_US, "BASE");
 
   delay(1500);
-
-  // done
-  Serial.println("Test run complete. Repeating in 5 seconds...");
-  delay(5000);
 }
