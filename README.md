@@ -17,9 +17,7 @@ This project focuses on mechanical prototyping, servo control, and debugging rea
 - RC receiver PWM signals detected by microcontroller
 
 ### In Progress
-- Assemble elbow joint and wrist joints (rotate and pitch)
-- Reducing joint sag under load
-- Improving mechanical stability
+- Currently redesigning the entire arm in solidworks because for some reason it deleted all my files and I couldn't find it. Because of this I started to procrastinate since I was in denial but I'm okay now. yay.
 
 ## Hardware
 
