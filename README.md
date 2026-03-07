@@ -2,7 +2,7 @@
 A multi-joint robotic arm prototype controlled by an ESP32 microcontroller and external radio receiver input.
 This project focuses on mechanical prototyping, servo control, and debugging real-world motion issues such as joint binding, torque limits, and power stability. The goal is to practice engineering workflow.
 
-![JointMovementDemo](assets/gifs/demo.gif)
+![JointMovementDemo](assets/gifs/demovideo1.gif)
 
 ## Current Status
 
