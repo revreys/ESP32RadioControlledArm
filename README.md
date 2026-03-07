@@ -1,34 +1,32 @@
-# ESP32RadioControlledArm
+# ESP32RadioControlledArm (WIP)
 A multi-joint robotic arm prototype controlled by an ESP32 microcontroller and external radio receiver input.
 This project focuses on mechanical prototyping, servo control, and debugging real-world motion issues such as joint binding, torque limits, and power stability. The goal is to practice engineering workflow.
 
-## Demo
-[![demo video](https://img.youtube.com/vi/GkcTVYBv-Io/hqdefault.jpg)](https://youtu.be/GkcTVYBv-Io?si=8iawj52zFQVG05ga)
-
-[Watch on YouTube](https://youtu.be/GkcTVYBv-Io?si=8iawj52zFQVG05ga)
+![JointMovementDemo](assets/gifs/demo.gif)
 
 ## Current Status
 
-### Working
-- Base rotation joint assembled
-- Shoulder joint assembled
-- External 5V power distribution implemented
-- Serial control and calibration functional
-- RC receiver PWM signals detected by microcontroller
+### Completed
+- Base resdesign for better stability during rapid motor movements.
+
+<img src="assets/images/imageofbase.jpg" width="550">
+
+- Included some headroom for the esp32 inside the base to keep it fully enclosed.
+
+<img src="assets/images/closeupimageofbase.jpg" width="550">
 
 ### In Progress
-- Currently redesigning the entire arm in solidworks because for some reason it deleted all my files and I couldn't find it. Because of this I started to procrastinate since I was in denial but I'm okay now. yay.
+- Redesigning shoulder joint to also include a bearing housing for smoother rotations.
 
 ## Hardware
-
 - ESP32-S3
-- 1x 25kg, 2x 20kg, 2 mid torque, 1 low torque servos
+- 2x 25kg, 1x 20kg, 2 mid torque, 1 low torque servos
 - External regulated 5V power supply
 - Radio receiver (PWM channel output)
 - Small breadboard and jumper wires
 - 3D printed parts
 
-## Purpose
-
-This project is intended as a hands-on learning platform for embedded systems, mechanical design, and debugging.  
-Rather than a finished product, it is an iterative engineering prototype focused on understanding how electrical, mechanical, and software systems interact :D
+## CAD Files
+- `CAD/SolidWorks/` → SolidWorks source files
+- `CAD/STEP/` → STEP to access parts without SW
+- `CAD/STL/` → Printable parts
