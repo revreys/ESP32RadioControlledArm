@@ -16,7 +16,7 @@ This project focuses on mechanical prototyping, servo control, and debugging rea
 <img src="assets/images/closeupimageofbase.jpg" width="550">
 
 ### In Progress
-- Redesigning shoulder joint to also include a bearing housing for smoother rotations.
+- Redesigning shoulder joints.
 
 ## Hardware
 - ESP32-S3
