@@ -11,7 +11,7 @@ This project focuses on mechanical prototyping, servo control, and debugging rea
 
 <img src="assets/images/imageofbase.jpg" width="550">
 
-- Included some headroom for the esp32 inside the base to keep it fully enclosed.
+- Included some wiggle room for the esp32 inside the base to keep it fully enclosed.
 
 <img src="assets/images/closeupimageofbase.jpg" width="550">
 
